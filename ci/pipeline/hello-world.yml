@@ -7,19 +7,26 @@ resource_types:
     tag: "6.0.1"
 
 resources:
+- name: repo
+  type: git
+  source:
+    uri: https://github.com/FezekaH/ronnie-api-platform.git
+
 - name: hello-world-pipeline-trigger
   icon: bike
   type: semver
   source:
     branch: pipeline-trigger
     driver: git
-    file: sandbox-trigger-file
-    uri: git@github.com/FezekaH/ronnie-api-platform.git
+    file: hello-world-trigger-file
+    uri: https://github.com/FezekaH/ronnie-api-platform.git
     private_key: ((github_deployment_key.private_key))
 
 jobs:
 - name: hello-world-job
   plan:
+  - get: repo
+    trigger: true  # tell Concourse to trigger this job when new versions are emitted
   - task: hello-world-task
     config:
       platform: linux
@@ -55,3 +62,6 @@ jobs:
         - |
           ls -l .
           cat the-artifact/message
+  - put: hello-world-pipeline-trigger
+    params:
+      bump: minor
