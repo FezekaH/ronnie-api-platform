@@ -1,4 +1,16 @@
 ---
+meta:
+  interpolate-vars: &interpolate-vars
+    task: interpolate-vars
+    image: ronnie-build-image
+    params:
+      VARS: vars-file/ci/secret/pipeline/hello-world.yml
+    input_mapping:
+      files: repo-with-secrets
+      vars-file: repo-with-secrets
+    output_mapping:
+      interpolated-files: repo-with-secrets-and-vars
+
 resource_types:
 - name: concourse-pipeline
   type: registry-image
