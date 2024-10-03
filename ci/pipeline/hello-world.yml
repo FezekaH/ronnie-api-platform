@@ -1,21 +1,57 @@
+---
+resource_types:
+- name: concourse-pipeline
+  type: registry-image
+  source:
+    repository: concourse/concourse-pipeline-resource
+    tag: "6.0.1"
+
+resources:
+- name: hello-world-pipeline-trigger
+  icon: bike
+  type: semver
+  source:
+    branch: pipeline-trigger
+    driver: git
+    file: sandbox-trigger-file
+    uri: git@github.com/FezekaH/ronnie-api-platform.git
+    private_key: ((github_deployment_key.private_key))
+
 jobs:
 - name: hello-world-job
   plan:
   - task: hello-world-task
     config:
-      # Tells Concourse which type of worker this task should run on
       platform: linux
-      # This is one way of telling Concourse which container image to use for a
-      # task. We'll explain this more when talking about resources
       image_resource:
         type: registry-image
         source:
-          repository: busybox # images are pulled from docker hub by default
-      # Add "the-artifact" to our task
+          repository: busybox
       outputs:
-      - name: the-artifact      
-      # The command Concourse will run inside the container
-      # echo "Hello world!"
+      - name: the-artifact
       run:
-        path: echo
-        args: ["Hello world!"]
+        # This is a neat way of embedding a script into a task
+        path: sh
+        args:
+        - -cx
+        - |
+          ls -l .
+          echo "hello from another step!" > the-artifact/message
+  # Add a second task that reads the contents of the-artifact/message
+  - task: read-the-artifact
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: busybox
+      # To receive "the-artifact", specify it as an input
+      inputs:
+      - name: the-artifact
+      run:
+        path: sh
+        args:
+        - -cx
+        - |
+          ls -l .
+          cat the-artifact/message
