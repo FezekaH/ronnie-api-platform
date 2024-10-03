@@ -18,23 +18,41 @@ resource_types:
     repository: concourse/concourse-pipeline-resource
     tag: "6.0.1"
 
+# declare the new resource type
+- name: rss
+  type: registry-image
+  source:
+    repository: suhlig/concourse-rss-resource
+    tag: latest
+
 resources:
+# use the resource as usual
+- name: dino-feed
+  type: rss
+  source:
+    url: http://www.qwantz.com/rssfeed.php
+
 - name: repo
   type: git
   source:
     uri: https://github.com/FezekaH/ronnie-api-platform.git
 
-- name: hello-world-pipeline-trigger
-  icon: bike
-  type: semver
-  source:
-    branch: pipeline-trigger
-    driver: git
-    file: hello-world-trigger-file
-    uri: https://github.com/FezekaH/ronnie-api-platform.git
-    private_key: ((github_deployment_key.private_key))
+# - name: hello-world-pipeline-trigger
+#   icon: bike
+#   type: semver
+#   source:
+#     branch: pipeline-trigger
+#     driver: git
+#     file: hello-world-trigger-file
+#     uri: https://github.com/FezekaH/ronnie-api-platform.git
+#     private_key: ((github_deployment_key.private_key))
 
 jobs:
+- name: announce
+  plan:
+  - get: dino-feed
+    trigger: true
+    
 - name: hello-world-job
   plan:
   - get: repo
@@ -74,6 +92,6 @@ jobs:
         - |
           ls -l .
           cat the-artifact/message
-  - put: hello-world-pipeline-trigger
-    params:
-      bump: minor
+  # - put: hello-world-pipeline-trigger
+  #   params:
+  #     bump: minor
